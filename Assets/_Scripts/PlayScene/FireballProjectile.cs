@@ -3,6 +3,8 @@ using SpellFlinger.Enum;
 using SpellSlinger.Networking;
 using System.Linq;
 using UnityEngine;
+using System.Collections;
+
 
 namespace SpellFlinger.PlayScene
 {
@@ -84,9 +86,12 @@ namespace SpellFlinger.PlayScene
                     player.DealDamage(_damage, OwnerPlayerStats);
                 }
             }
-            Runner.DelayRPC(() => { Runner.Despawn(Object); }, _explosionDuration);
-
-
+            StartCoroutine(DespawnAfterDelay());
+        }
+        private IEnumerator DespawnAfterDelay()
+        {
+            yield return new WaitForSeconds(_explosionDuration);
+            Runner.Despawn(Object);
         }
 
         [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]

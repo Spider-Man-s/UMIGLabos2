@@ -9,6 +9,7 @@ using SpellFlinger.LoginScene;
 using Unity.VisualScripting;
 using UnityEngine.SceneManagement;
 using WebSocketSharp;
+using UnityEngine.SceneManagement;
 
 namespace SpellSlinger.Networking
 {
@@ -20,7 +21,7 @@ namespace SpellSlinger.Networking
         [SerializeField] private NetworkRunner _networkRunnerPrefab = null;
         [SerializeField] private int _playerCount = 10;
         private NetworkRunner _runner = null;
-        private NetworkSceneManagerDefault _networkSceneManager= null;
+        private NetworkSceneManagerDefault _networkSceneManager = null;
         private Dictionary<PlayerRef, NetworkObject> _spawnedCharacters = new Dictionary<PlayerRef, NetworkObject>();
         private List<SessionInfo> _sessions = new List<SessionInfo>();
         private static GameModeType _gameModeType;
@@ -40,13 +41,13 @@ namespace SpellSlinger.Networking
 
         public void ConnectToLobby(String playerName = null)
         {
-            if(!playerName.IsNullOrEmpty()) _playerName = playerName;
+            if (!playerName.IsNullOrEmpty()) _playerName = playerName;
             _runner.JoinSessionLobby(SessionLobby.ClientServer);
         }
 
         public async void CreateSession(string sessionName, GameModeType gameMode, LevelType level)
         {
-            
+
             /* U ovoj metodi potrebno je lokalno cache-irati odabrani nacin igre, te pozvati metodu StartGame NetworkRunner instance koja igraca spaja u sobu.
              * StartGame metoda prima argument tipa StartGameArgs strukture. Potrebno je napraviti novu instancu strukture, te joj inicijalizirati vrijednosti.
 
@@ -60,8 +61,9 @@ namespace SpellSlinger.Networking
              */
 
 
-            _gameModeType=gameMode;
-            StartGameArgs args = new StartGameArgs(){
+            _gameModeType = gameMode;
+            StartGameArgs args = new StartGameArgs()
+            {
                 GameMode = GameMode.Host,
                 SessionName = sessionName,
                 Scene = SceneRef.FromIndex((int)level),
@@ -91,24 +93,28 @@ namespace SpellSlinger.Networking
             });
         }
 
-        public void LeaveSession() // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        public void LeaveSession()
         {
             /*
              * U ovoj metodi je potrebno pozvati Shutdown metodu instance NetworkRunner klase,
               ucitati pocetni ekran 
-             * i otkljucati cursor korisnika !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+             * i otkljucati cursor korisnika 
              */
 
-             if (_runner != null && !_runner.IsDestroyed()) _runner.Shutdown();
-             _runner.LoadScene(SceneRef.FromIndex(3), LoadSceneMode.Additive);
+            if (_runner != null && !_runner.IsDestroyed())
+            {
+                SceneManager.LoadScene("LoginScreen");
+                _runner.Shutdown();
+            }
+
             Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;         
-            // _runner.ProvideInput = false;   //??????????
+            Cursor.visible = true;
+
         }
 
         public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
         {
-            _sessions=sessionList;
+            _sessions = sessionList;
             SessionView.Instance.UpdateSessionList();
             /*
              * U ovoj metodi je potrebno lokalno spremiti osvjezenu listu soba, te osvjeziti prikaz liste soba pozivom 

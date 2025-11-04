@@ -21,7 +21,7 @@ namespace SpellFlinger.PlayScene
         [SerializeField] private Transform _modelLeftHand = null;
         [SerializeField] private Transform _modelRightHand = null;
         [SerializeField] private Animator _playerAnimator = null;
-        [SerializeField] private float _doubleJumpDelay = 0f;
+        [SerializeField] private float _doubleJumpDelay = 1f;
         private float _fireRate = 0;
         private PlayerAnimationController _playerAnimationController = null;
         private CameraController _cameraController = null;
@@ -33,6 +33,7 @@ namespace SpellFlinger.PlayScene
         private float _jumpTime = 0f;
         private bool _doubleJumpAvailable = false;
         private int _updatesSinceLastGrounded = 0;
+        private NetworkButtons _previousButtons;
 
         [Networked, OnChangedRender(nameof(RespawnTimeChanged))] public int RemainingRespawnTime { get; private set; }
         public PlayerStats PlayerStats => _playerStats;
@@ -134,12 +135,12 @@ namespace SpellFlinger.PlayScene
                  * U ovoj metodi potrebno je nadopuniti kod za kretanje. Komande smijera kretanja dobivaju se iz poslanog NetworkInputData
                  * podatka.
                   Sve narede kretanja odvijaju se preko poziva metoda pripadne instance klase NetworkCharacterController-a.
-
-
                  * Potrebno pozvati metodu Move za pomicanje lika klase NetworkCharacterController. +
+                
 
-                 * Takoder je potrebno projveriti je li dana naredba za skok. Ako je, i ako je igrac prizemljen potrebno +
-                 * Potrebno je azurirati stanje animacije PlayerAnimationController-a.                      +?
+
+                 * Takoder je potrebno projveriti je li dana naredba za skok. Ako je, i ako je igrac prizemljen potrebno 
+                 * Potrebno je azurirati stanje animacije PlayerAnimationController-a.                      
                  
                  Takoder ako je igrac prizemljen i ako je proslo dovoljno vremena od 
                  * proslog skoka potrebno je pozvati metodu za skok klase NetworkCharacterController.
@@ -150,33 +151,46 @@ namespace SpellFlinger.PlayScene
                   Zastavicu duplog skoka je potrebno postaviti kada je
                  * lik prizemljen. Pri skoku je potrebno zabiljeziti posljednje vrijeme kada je skok aktiviran. 
                  * 
+
+
                  * Kod metode Move klase NetworkCharacterController je izmjenjen za potrebe ovog projekta kako bi kretanje bolje odgovaralo korisnickom iskustvu. 
                  * Tu metodu kao i metodu AdjustVelocityToSlope mozete prouciti i po zelji izmijeniti. 
                  */
                 //                                      
-                _networkController.Move(data.Direction, _playerStats.IsSlowed, data.YRotation, isGrounded);
 
-                if (data.Buttons.IsSet(NetworkInputData.JUMP) && isGrounded)
+                bool spacePressed = data.Buttons.WasPressed(_previousButtons, NetworkInputData.JUMP);
+
+                if (isGrounded)
                 {
-                    _playerAnimationController.AnimationUpdate(isGrounded, data.Direction.x, data.YRotation, ref _playerAnimationState, _playerAnimator, _playerModel.transform, _cameraController.transform);
+                    _doubleJumpAvailable = true;
                 }
 
-                /*
-                                if (isGrounded)
-                                {
-                                    _doubleJumpAvailable = true;
-                                    _jumpTime = Time.time;
-                                }
-                                else
-                                {
-                                    if (data.Buttons.IsSet(NetworkInputData.JUMP) && _doubleJumpAvailable && (Time.time - _jumpTime) > _doubleJumpDelay)
-                                    {
-                                        _networkController.Jump();
-                                        _doubleJumpAvailable = false;
-                                    }
-                                }
+                if (isGrounded && spacePressed && (Runner.SimulationTime - _jumpTime) > _doubleJumpDelay)
+                {
+                    _networkController.Jump();
+                    _jumpTime = Runner.SimulationTime;
+                    isGrounded = false;
 
-                */
+                }
+                else if (spacePressed && _doubleJumpAvailable && !isGrounded)
+                {
+                    _networkController.Jump(true, true);
+                    Debug.Log("Double Jump");
+                    _doubleJumpAvailable = false;
+                    _jumpTime = Runner.SimulationTime;
+
+                }
+                _previousButtons = data.Buttons;
+
+
+
+
+
+                _networkController.Move(data.Direction, _playerStats.IsSlowed, data.YRotation, isGrounded);
+                _playerAnimationController.AnimationUpdate(isGrounded, data.Direction.x, data.Direction.y, ref _playerAnimationState, _playerAnimator, _playerModel.transform, _cameraController.transform);
+
+
+
             }
         }
 

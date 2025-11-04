@@ -52,7 +52,7 @@ namespace SpellSlinger.Networking
             {
                 _accumulatedInput.YRotation += Input.GetAxis("Mouse X") * SensitivitySettingsScriptable.Instance.LeftRightMultiplier;
             }
-
+            _accumulatedInput.Direction += direction;
 
             buttons.Set(NetworkInputData.SHOOT, Input.GetMouseButton(0));
 
