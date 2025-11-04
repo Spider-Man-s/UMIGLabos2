@@ -153,18 +153,30 @@ namespace SpellFlinger.PlayScene
                  * Kod metode Move klase NetworkCharacterController je izmjenjen za potrebe ovog projekta kako bi kretanje bolje odgovaralo korisnickom iskustvu. 
                  * Tu metodu kao i metodu AdjustVelocityToSlope mozete prouciti i po zelji izmijeniti. 
                  */
-                //                                      slowed na false???
-                _networkController.Move(data.Direction, false, data.YRotation, isGrounded);
+                //                                      
+                _networkController.Move(data.Direction, _playerStats.IsSlowed, data.YRotation, isGrounded);
 
-                if (data.Buttons.IsSet(NetworkInputData.JUMP) && isGrounded){                 //is this ok????
-                    _playerAnimationController.AnimationUpdate(isGrounded, data.Direction.x, data.YRotation, ref _playerAnimationState, _playerAnimator, _playerModel.transform, _cameraController.transform );
-                };
-
-                if( isGrounded && _updatesSinceLastGrounded < 3){
-                    _networkController.Jump(false, false);
+                if (data.Buttons.IsSet(NetworkInputData.JUMP) && isGrounded)
+                {
+                    _playerAnimationController.AnimationUpdate(isGrounded, data.Direction.x, data.YRotation, ref _playerAnimationState, _playerAnimator, _playerModel.transform, _cameraController.transform);
                 }
-                
 
+                /*
+                                if (isGrounded)
+                                {
+                                    _doubleJumpAvailable = true;
+                                    _jumpTime = Time.time;
+                                }
+                                else
+                                {
+                                    if (data.Buttons.IsSet(NetworkInputData.JUMP) && _doubleJumpAvailable && (Time.time - _jumpTime) > _doubleJumpDelay)
+                                    {
+                                        _networkController.Jump();
+                                        _doubleJumpAvailable = false;
+                                    }
+                                }
+
+                */
             }
         }
 
@@ -182,17 +194,34 @@ namespace SpellFlinger.PlayScene
             /*
              * U ovoj metodi potrebno je zamijeniti liniju yield return null potrebnim kodom.
              * Prvo je potrebno pozvati metodu udaljene procedure za gasenje 
-             * controllera lika na klijentu, jer se ova metoda izvodi na racunalu domaćina.
+             *  lika na klijentu, jer se ova metoda izvodi na racunalu domaćina.
+
              * Potom je potrebno postaviti stanje animacije smrti PlayerAnimationController-a
-             * i zapoceti odbrojavanje. Svake sekunde je potrebno smanjiti vrijednost umrezene 
-             * varijable RemainingRespawnTime za jedan, dok ne dode do 0. Kada postigne vrijednost
+             * i zapoceti odbrojavanje.
+              Svake sekunde je potrebno smanjiti vrijednost umrezene 
+             * varijable RemainingRespawnTime za jedan, dok ne dode do 0.
+              Kada postigne vrijednost
              * 0 potrebno je pozvati medotu pripadne instance klase PlayerStats za resetiranje zivotnih
              * bodova, pozvati metodu udaljenog poziva za ponovnu aktivaciju conrollera na klijentu, 
+
              * postaviti zastavicu za ponocno postavljanje nasumicne pocetne pozicije i postaviti 
              * stanje animacije zivljenja PlayerAnimationController-a.
              */
 
+            RPC_DisableController();
+            _playerAnimationController.SetDeadState(ref _playerAnimationState, _playerAnimator);
+            while (RemainingRespawnTime > 0)
+            {
+                yield return new WaitForSeconds(1f);
+                RemainingRespawnTime--;
+            }
+            _playerStats.ResetHealth();
+            RPC_EnableController();
+            _resetPosition = true;
+            _playerAnimationController.SetAliveState(ref _playerAnimationState, _playerAnimator);
+
             yield return null;
+
         }
 
         [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority, HostMode = RpcHostMode.SourceIsServer)]
@@ -202,6 +231,11 @@ namespace SpellFlinger.PlayScene
              * U ovoj metodi potrebno je postaviti stanje animacije smrti PlayerAnimationControllera,
              * prikazati ekran smrti preko singleton instance UiManager skripte, te onesposobiti i zakljućati kameru.
              */
+            _playerAnimationController.SetDeadState(ref _playerAnimationState, _playerAnimator);
+            UiManager.Instance.ShowPlayerDeathScreen(_respawnTime);
+            _cameraController.CameraLock = true;
+            _cameraController.CameraEnabled = false;
+
         }
 
         private void RespawnTimeChanged()

@@ -50,7 +50,7 @@ namespace SpellFlinger.PlayScene
             _playerCharacterController = GetComponent<PlayerCharacterController>();
             _playerScoreboardData = UiManager.Instance.CreatePlayerScoarboardData();
             PlayerManager.Instance.RegisterPlayer(this);
-            
+
             if (HasInputAuthority)
             {
                 _playerNameText.gameObject.SetActive(false);
@@ -59,14 +59,14 @@ namespace SpellFlinger.PlayScene
                 else if (FusionConnection.GameModeType == GameModeType.TDM) UiManager.Instance.ShowTeamScore();
             }
 
-            if(PlayerName.Value != default) PlayerNameChanged();
+            if (PlayerName.Value != default) PlayerNameChanged();
             if (Team != default) TeamChanged();
             if (SelectedWeapon != default) WeaponChanged();
-            if(Health != default) HealthChanged();
-            if(Kills != default) KillsChanged();
-            if(Deaths != default) DeathsChanged();
+            if (Health != default) HealthChanged();
+            if (Kills != default) KillsChanged();
+            if (Deaths != default) DeathsChanged();
 
-            if(!HasInputAuthority && FusionConnection.GameModeType == GameModeType.DM) PlayerManager.Instance.SetPlayerColor(this);
+            if (!HasInputAuthority && FusionConnection.GameModeType == GameModeType.DM) PlayerManager.Instance.SetPlayerColor(this);
         }
 
         [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, HostMode = RpcHostMode.SourceIsHostPlayer)]
@@ -103,9 +103,22 @@ namespace SpellFlinger.PlayScene
             /*
              * Ako su promjenjeni životni bodovi vlastitog igrača potrebno je ažurirati prikaz 
              * života na dnu ekrana pozivom metode instance singleton klase UiManager,
+             
              * a ako su promjenjeni životni bodovi nekog drugog igrača potrebno je ažurirati
              * pripadni prikaz životnih bodova koji se nalazi iznad glave igrača.
              */
+
+            float healthPercentage = (float)Health / _maxHealth;
+            if (HasInputAuthority)
+            {
+                UiManager.Instance.UpdateHealthBar(Health, healthPercentage);
+            }
+            else
+            {
+                _healthBar.value = healthPercentage;
+            }
+
+
         }
 
         private void KillsChanged()
@@ -115,6 +128,10 @@ namespace SpellFlinger.PlayScene
              * Također je potrebno ažurirati prikaz bodova na vrhu ekrana pozivom pripadnih metoda instance 
              * singleton klase UiManager ovisno je li u pitanju timska igra ili svatko protiv svakoga.
              */
+            _playerScoreboardData.UpdateScore(Kills, Deaths);
+            if (FusionConnection.GameModeType == GameModeType.TDM) UiManager.Instance.UpdateTeamScore();
+            else if (FusionConnection.GameModeType == GameModeType.DM) UiManager.Instance.UpdateSoloScore(Kills);
+
         }
 
         private void DeathsChanged() => _playerScoreboardData.UpdateScore(Kills, Deaths);
@@ -127,7 +144,7 @@ namespace SpellFlinger.PlayScene
              * a nakon smanjivanja padnu na nula, potrebno je povećati broj
              * deathova igrača, obavijestiti PlayerCharacterController o smrti igrača,
              * te povećati broj killova igrača koji je napravio štetu, također u 
-             * slučaju načina igre svatko protiv svakoga potrebno je povećati broj 
+             * slučaju načina igre svatko protiv svakoga - mislite timski? potrebno je povećati broj 
              * bodova tima igrača kojemu se dodaje bod.
              * 
              * 
@@ -136,19 +153,46 @@ namespace SpellFlinger.PlayScene
              * iz klase GameManager potrebno je pozvati pripadnu metodu za kraj igre singleton 
              * instance klase GameManager.
              */
+
+            Health -= damage;
+            if (Health <= 0 && (Health + damage) > 0)
+            {
+                Deaths++;
+                _playerCharacterController.PlayerKilled();
+                attacker.Kills++;
+
+                if (FusionConnection.GameModeType == GameModeType.TDM)
+                {
+                    GameManager.Instance.AddTeamKill(attacker.Team);
+                    if (GameManager.Instance.GetTeamKills(attacker.Team) >= GameManager.Instance.TeamKillsForWin)
+                    {
+                        GameManager.Instance.GameEnd(attacker.Team);
+                    }
+                }
+
+                if (FusionConnection.GameModeType == GameModeType.DM)
+                {
+                    if (attacker.Kills >= GameManager.Instance.SoloKillsForWin)
+                    {
+                        GameManager.Instance.GameEnd(attacker.PlayerName.ToString());
+                    }
+                }
+
+            }
         }
 
         public void Heal(int healAmount)
         {
             Health += healAmount;
-            if(Health > _maxHealth) Health  = _maxHealth;
+            if (Health > _maxHealth) Health = _maxHealth;
         }
 
         public void ApplySlow(float duration)
         {
             /*
-             * U ovoj metodi je potrebno postaviti trajanje usporenog kretanja nakon pogotka ledenim projektilom.
+             * U ovoj metodi je potrebno postaviti trajanje usporenog kretanja nakon pogotka ledenim projektilom. +
              */
+            SlowDuration = duration;
         }
 
         public void ResetHealth() => Health = _maxHealth;
@@ -171,7 +215,7 @@ namespace SpellFlinger.PlayScene
 
         private void OnDestroy()
         {
-            if(_playerScoreboardData != null && !_playerScoreboardData.gameObject.IsDestroyed()) Destroy(_playerScoreboardData.gameObject);
+            if (_playerScoreboardData != null && !_playerScoreboardData.gameObject.IsDestroyed()) Destroy(_playerScoreboardData.gameObject);
             PlayerManager.Instance?.UnregisterPlayer(this);
         }
     }

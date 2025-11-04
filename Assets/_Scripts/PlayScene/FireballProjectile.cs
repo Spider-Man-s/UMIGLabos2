@@ -59,11 +59,34 @@ namespace SpellFlinger.PlayScene
             /*
              * U ovoj metodi je potrebno ugasiti vizualni efekt projektila i upaliti vizualni efekt eksplzije.
              * To je potrebno učiniti i na udaljenim klijentima putem metode ExplodeEffectRpc. 
+
              * Nakon toga je potrebno napraviti detekciju pogotka. Detekcija pogotka se radi na sličan način
              * kao u metodi FixedUpdateNetwork, no pazite da ne napravite štetu igraču kojega je projektil već
              * pogodio u toj metodi. 
              * Nakon toga je potrebno uništiti objekt, no tek nakon što završi trajanje eksplozije.
              */
+            _projectileEffect.SetActive(false);
+            _explosionEffect.SetActive(true);
+            RPC_ExplodeEffect();
+            if (_hitPlayer == null)
+            {
+                Collider[] hitColliders = Physics.OverlapSphere(transform.position, _explosionRange);
+
+                foreach (Collider collider in hitColliders)
+                {
+                    if (collider.tag != "Player") continue;
+
+                    PlayerStats player = collider.GetComponent<PlayerStats>();
+
+                    if (player.Object.InputAuthority == OwnerPlayerStats.Object.InputAuthority) continue;
+                    if (FusionConnection.GameModeType == GameModeType.TDM && player.Team == OwnerPlayerStats.Team) continue;
+
+                    player.DealDamage(_damage, OwnerPlayerStats);
+                }
+            }
+            Runner.DelayRPC(() => { Runner.Despawn(Object); }, _explosionDuration);
+
+
         }
 
         [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
@@ -72,6 +95,9 @@ namespace SpellFlinger.PlayScene
             /*
              * U ovoj metodi je potrebno ugasiti vizualni efekt projektila i upaliti vizualni efekt eksplozije za udaljene klijente.
              */
+            _projectileEffect.SetActive(false);
+            _explosionEffect.SetActive(true);
+
         }
 
 

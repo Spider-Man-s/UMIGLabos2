@@ -28,10 +28,20 @@ namespace SpellFlinger.PlayScene
         {
             /*
              * Potrebno je zamijeniti liniju return (TeamType)(-1); tako da metoda vraća
-             * TeamType s timom koji ima manje igrača.
+             * TeamType s timom koji ima manje igrača. 
              */
 
-            return (TeamType)(-1);
+            int teamACount = 0;
+            int teamBCount = 0;
+
+
+            foreach (PlayerStats player in _players)
+            {
+                if (player.Team == TeamType.TeamA) teamACount++;
+                else if (player.Team == TeamType.TeamB) teamBCount++;
+            }
+
+            return (TeamType)(teamACount <= teamBCount ? TeamType.TeamA : TeamType.TeamB);
         }
 
         public void SetFriendlyTeam(TeamType friendlyTeam)

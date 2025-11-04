@@ -14,9 +14,9 @@ namespace SpellFlinger.PlayScene
         [SerializeField] private int _gameEndTime = 0;
 
         public static GameManager Instance => _instance;
-        [Networked] public int TeamAKills { get; private set;}
-        [Networked] public int TeamBKills { get; private set;}
-        [Networked, OnChangedRender(nameof(WinnerChanged))] public TeamType WinnerTeam { get; private set;}
+        [Networked] public int TeamAKills { get; private set; }
+        [Networked] public int TeamBKills { get; private set; }
+        [Networked, OnChangedRender(nameof(WinnerChanged))] public TeamType WinnerTeam { get; private set; }
         [Networked, OnChangedRender(nameof(WinnerChanged))] public NetworkString<_32> WinnerPlayerName { get; set; }
         [Networked] public int RemainingGameEndTime { get; private set; }
         public int TeamKillsForWin => _teamKillsForWin;
@@ -35,7 +35,7 @@ namespace SpellFlinger.PlayScene
 
         public void AddTeamKill(TeamType team)
         {
-            if(team == TeamType.TeamA) TeamAKills++;
+            if (team == TeamType.TeamA) TeamAKills++;
             else TeamBKills++;
         }
 
@@ -63,14 +63,25 @@ namespace SpellFlinger.PlayScene
 
             /*
              * U ovoj korutini potrebno je zamijeniti yield return null; liniju potrebnim kodom.
+
              * Na početku potrebno pozvati metodu klase PlayerManager koja svim
-             * igračima šalje poruke za završetak runde. Potom započinje odbrojavanje gdje svake 
-             * sekunde smanjuje vrijednost varijable RemainingGameEndTime za jedan dok ne dođe do 0.
+             * igračima šalje poruke za završetak runde. +
+             
+              Potom započinje odbrojavanje gdje svake 
+             * sekunde smanjuje vrijednost varijable RemainingGameEndTime za jedan dok ne dođe do 0. +
+
              * Nakon što je završilo odbrojava preko klase PlayerManager potrebno je svim igračima potrebno 
-             * poslati poruke za početak nove runde.
+             * poslati poruke za početak nove runde. +
              */
 
-            yield return null;
+            PlayerManager.Instance.SendGameEndRpc();
+            while (RemainingGameEndTime > 0)
+            {
+                yield return new WaitForSeconds(1f);
+                RemainingGameEndTime--;
+            }
+
+            PlayerManager.Instance.SendGameStartRpc();
         }
 
         private void WinnerChanged() => UiManager.Instance.UpdateEndGameText();

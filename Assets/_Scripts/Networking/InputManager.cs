@@ -44,12 +44,22 @@ namespace SpellSlinger.Networking
              * Također je potrebno očitati naredbu za skok pritiskom tipke space. Njeno spremanje se postiže na način sličan
              * kao spremanje naredbe za pucanje.
              */
-
+            if (Input.GetKey(KeyCode.W)) direction += Vector2.up;
+            if (Input.GetKey(KeyCode.S)) direction += Vector2.down;
+            if (Input.GetKey(KeyCode.A)) direction += Vector2.left;
+            if (Input.GetKey(KeyCode.D)) direction += Vector2.right;
+            if (Input.GetAxis("Mouse X") != 0)
+            {
+                _accumulatedInput.YRotation += Input.GetAxis("Mouse X") * SensitivitySettingsScriptable.Instance.LeftRightMultiplier;
+            }
 
 
             buttons.Set(NetworkInputData.SHOOT, Input.GetMouseButton(0));
 
             if (Input.GetMouseButton(0)) _accumulatedInput.ShootTarget = FusionConnection.Instance.LocalCharacterController.GetShootDirection();
+
+            buttons.Set(NetworkInputData.JUMP, Input.GetKey(KeyCode.Space));
+
 
             _accumulatedInput.Buttons = new NetworkButtons(_accumulatedInput.Buttons.Bits | buttons.Bits);
 
