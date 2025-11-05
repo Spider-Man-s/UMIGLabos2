@@ -12,7 +12,7 @@ namespace SpellFlinger.PlayScene
         [SerializeField] private float _dissolveDelay = 0f;
         [SerializeField] private float _slowDuration = 0f;
         [SerializeField] private GameObject _projectileModel = null;
-        
+
         [Networked] public bool ProjectileHit { get; private set; }
 
         public override void Throw(Vector3 direction, PlayerStats ownerPlayerStats)
@@ -77,5 +77,5 @@ namespace SpellFlinger.PlayScene
         //    Collider[] hitColliders = Physics.OverlapSphere(transform.position, _range);
         //    if (hitColliders.Any((collider) => collider.tag == "Ground")) Debug.Log("In range");
         //}
-    }    
+    }
 }

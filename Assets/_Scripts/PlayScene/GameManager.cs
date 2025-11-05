@@ -59,6 +59,8 @@ namespace SpellFlinger.PlayScene
 
         private IEnumerator GameEndCountdown()
         {
+            TeamAKills = 0;
+            TeamBKills = 0;
             RemainingGameEndTime = _gameEndTime;
 
             /*

@@ -31,3 +31,9 @@ MonoBehaviour:
     GlovePrefab: {fileID: 7270922572416618293, guid: 30b9dc8380bc22742b412f7dde43a70e, type: 3}
     GloveLocation: {x: 0, y: 0.28, z: 0}
     FireRate: 0.25
+  - WeaponType: 4
+    WeaponImage: {fileID: 21300000, guid: 47abad564dac8db4486ded75b70f99e0, type: 3}
+    WeaponPrefab: {fileID: 6983067284333611841, guid: 63ba9c5fc17e7b643a15f7144fff7cce, type: 3}
+    GlovePrefab: {fileID: 7270922572416618293, guid: 30b9dc8380bc22742b412f7dde43a70e, type: 3}
+    GloveLocation: {x: 0, y: 0.28, z: 0}
+    FireRate: 0.25

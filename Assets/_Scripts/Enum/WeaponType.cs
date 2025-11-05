@@ -6,5 +6,6 @@ namespace SpellFlinger.Enum
         Fire = 1,
         Ice = 2,
         Tesla = 3,
+        AvadaKedavra = 4
     }
 }
