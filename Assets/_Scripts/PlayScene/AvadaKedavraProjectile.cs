@@ -3,6 +3,7 @@ using SpellFlinger.Enum;
 using SpellSlinger.Networking;
 using System.Linq;
 using UnityEngine;
+using System.Collections;
 
 namespace SpellFlinger.PlayScene
 {
@@ -10,14 +11,19 @@ namespace SpellFlinger.PlayScene
     {
         [SerializeField] private float _range = 0f;
         [SerializeField] private GameObject _projectileModel = null;
+        [SerializeField] private AudioClip _castAudio = null;
 
         [Networked] public bool ProjectileHit { get; private set; }
 
+
         public override void Throw(Vector3 direction, PlayerStats ownerPlayerStats)
         {
-            Direction = direction.normalized * _movementSpeed;
+
             OwnerPlayerStats = ownerPlayerStats;
+            RPC_PlayCastSound();
+            Direction = direction.normalized * _movementSpeed;
             transform.rotation = Quaternion.FromToRotation(transform.forward, Direction.normalized);
+
         }
 
         public override void FixedUpdateNetwork()
@@ -62,6 +68,13 @@ namespace SpellFlinger.PlayScene
         {
             if (_projectileModel != null)
                 _projectileModel.SetActive(false);
+        }
+
+        [Rpc(RpcSources.StateAuthority, RpcTargets.All, HostMode = RpcHostMode.SourceIsServer)]
+        private void RPC_PlayCastSound()
+        {
+            if (_castAudio != null)
+                AudioSource.PlayClipAtPoint(_castAudio, transform.position);
         }
     }
 }
