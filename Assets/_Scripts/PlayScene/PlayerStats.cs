@@ -130,7 +130,7 @@ namespace SpellFlinger.PlayScene
              */
             _playerScoreboardData.UpdateScore(Kills, Deaths);
             if (FusionConnection.GameModeType == GameModeType.TDM) UiManager.Instance.UpdateTeamScore();
-            else if (FusionConnection.GameModeType == GameModeType.DM) UiManager.Instance.UpdateSoloScore(Kills);
+            else if (FusionConnection.GameModeType == GameModeType.DM && HasInputAuthority) UiManager.Instance.UpdateSoloScore(Kills);
 
         }
 

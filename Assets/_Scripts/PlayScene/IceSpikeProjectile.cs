@@ -39,12 +39,13 @@ namespace SpellFlinger.PlayScene
                     PlayerStats player = collider.GetComponent<PlayerStats>();
 
                     if (player.Object.InputAuthority == OwnerPlayerStats.Object.InputAuthority) continue;
-                    if (FusionConnection.GameModeType == GameModeType.TDM && player.Team != OwnerPlayerStats.Team)
+                    if (FusionConnection.GameModeType == GameModeType.TDM && player.Team == OwnerPlayerStats.Team)
                     {
-
-                        player.DealDamage(_damage, OwnerPlayerStats);
-                        player.ApplySlow(_slowDuration);
+                        continue;
                     }
+                    player.DealDamage(_damage, OwnerPlayerStats);
+                    player.ApplySlow(_slowDuration);
+
 
                     ProjectileHit = true;
                     _projectileModel.transform.parent = player.transform;

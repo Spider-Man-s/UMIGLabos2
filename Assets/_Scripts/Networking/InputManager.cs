@@ -48,6 +48,12 @@ namespace SpellSlinger.Networking
             if (Input.GetKey(KeyCode.S)) direction += Vector2.down;
             if (Input.GetKey(KeyCode.A)) direction += Vector2.left;
             if (Input.GetKey(KeyCode.D)) direction += Vector2.right;
+
+            if (Input.GetKey(KeyCode.UpArrow)) direction += Vector2.up;
+            if (Input.GetKey(KeyCode.DownArrow)) direction += Vector2.down;
+            if (Input.GetKey(KeyCode.LeftArrow)) direction += Vector2.left;
+            if (Input.GetKey(KeyCode.RightArrow)) direction += Vector2.right;
+
             if (Input.GetAxis("Mouse X") != 0)
             {
                 _accumulatedInput.YRotation += Input.GetAxis("Mouse X") * SensitivitySettingsScriptable.Instance.LeftRightMultiplier;

@@ -33,6 +33,7 @@ namespace SpellFlinger.PlayScene
 
         private void UpdateTeamColors()
         {
+            UiManager.Instance.ShowTeamScore();
             if (PlayerManager.Instance.FriendlyTeam == _teamType)
             {
                 _playerName.color = PlayerManager.Instance.FriendlyColor;

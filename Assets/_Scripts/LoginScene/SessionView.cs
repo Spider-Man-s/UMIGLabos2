@@ -61,16 +61,20 @@ namespace SpellFlinger.LoginScene
              * Stvaranje objekata se provodi na slican nacin kao stvaranje WeaponSelectionToggle objekata iz metode Awake.
              */
 
-            foreach (var item in _sessions){
-                Destroy(item);
-             }
+            foreach (var item in _sessions)
+            {
+                if (item != null)
+                    Destroy(item.gameObject);
+            }
+            _sessions.Clear();
 
-            foreach (var item in  FusionConnection.Instance.Sessions){
+            foreach (var item in FusionConnection.Instance.Sessions)
+            {
                 SessionDataView newSessions = Instantiate(_sessionDataViewPrefab, _sessionListContainer.transform);
                 newSessions.ShowSession(item.Name, item.PlayerCount, item.MaxPlayers, (LevelType)(int)item.Properties["LevelType"],
                  (GameModeType)(int)item.Properties["GameModeType"], SessionOnToggle, _sessionListContainer);
                 _sessions.Add(newSessions);
-            } 
+            }
         }
 
         private void SessionOnToggle(bool isOn, (string, GameModeType, LevelType) sessionData)
